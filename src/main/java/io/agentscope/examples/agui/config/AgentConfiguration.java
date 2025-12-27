@@ -42,15 +42,8 @@ public class AgentConfiguration {
 
     @Autowired
     public void configureAgents(AguiAgentRegistry registry) {
-        // Register a factory for the default agent
-        // Using a factory ensures each request gets a fresh agent instance
         registry.registerFactory("default", this::createDefaultAgent);
-
-        // Register additional agents with different IDs
-        // Example: a simple chat agent without tools
         registry.registerFactory("chat", this::createChatAgent);
-
-        // Example: an agent specialized for calculations
         registry.registerFactory("calculator", this::createCalculatorAgent);
 
         System.out.println("Registered agents with AG-UI registry: default, chat, calculator");
@@ -78,15 +71,19 @@ public class AgentConfiguration {
         toolkit.registerTool(new ExampleTools());
 
         // Create the agent
+        String sysPrompt = """
+                您是一个通过 AG-UI 协议提供的有用 AI 助手。
+                您可以帮助用户处理各种任务，包括天气查询和计算。
+                请在回复中保持简洁和有帮助。
+                """;
         return ReActAgent.builder()
                 .name("AG-UI Assistant")
-                .sysPrompt(
-                        "You are a helpful AI assistant exposed via the AG-UI protocol. "
-                                + "You can help users with various tasks including weather queries "
-                                + "and calculations. Be concise and helpful in your responses.")
+                .sysPrompt(sysPrompt)
                 .model(
-                        DashScopeChatModel.builder().apiKey(apiKey).modelName("qwen-plus").stream(
-                                        true)
+                        DashScopeChatModel.builder()
+                                .apiKey(apiKey)
+                                .modelName("qwen-plus")
+                                .stream(true)
                                 .enableThinking(false)
                                 .formatter(new DashScopeChatFormatter())
                                 .build())
@@ -104,17 +101,21 @@ public class AgentConfiguration {
     private Agent createChatAgent() {
         String apiKey = getRequiredApiKey();
 
+        String sysPrompt = """
+                您是一个友好的对话助手。
+                进行自然的对话并帮助用户回答一般性问题和讨论。
+                """;
         return ReActAgent.builder()
                 .name("Chat Assistant")
-                .sysPrompt(
-                        "You are a friendly conversational assistant. "
-                                + "Engage in natural conversation and help users "
-                                + "with general questions and discussions.")
+                .sysPrompt(sysPrompt)
                 .model(
-                        DashScopeChatModel.builder().apiKey(apiKey).modelName("qwen-plus").stream(
-                                        true)
+                        DashScopeChatModel.builder()
+                                .apiKey(apiKey)
+                                .modelName("qwen-plus")
+                                .stream(true)
                                 .formatter(new DashScopeChatFormatter())
-                                .build())
+                                .build()
+                )
                 .memory(new InMemoryMemory())
                 .maxIters(1)
                 .build();
@@ -126,21 +127,27 @@ public class AgentConfiguration {
     private Agent createCalculatorAgent() {
         String apiKey = getRequiredApiKey();
 
+        String sysPrompt = """
+                您是一个专门从事计算的数学助手。
+                使用计算工具执行数学运算。
+                始终展示您的计算过程并解释结果。
+                """;
+
         // Create toolkit with only calculation tools
         Toolkit toolkit = new Toolkit();
         toolkit.registerTool(new ExampleTools());
 
         return ReActAgent.builder()
                 .name("Calculator Agent")
-                .sysPrompt(
-                        "You are a mathematical assistant specialized in calculations. "
-                                + "Use the calculate tool to perform mathematical operations. "
-                                + "Always show your work and explain the results.")
+                .sysPrompt(sysPrompt)
                 .model(
-                        DashScopeChatModel.builder().apiKey(apiKey).modelName("qwen-plus").stream(
-                                        true)
+                        DashScopeChatModel.builder()
+                                .apiKey(apiKey)
+                                .modelName("qwen-plus")
+                                .stream(true)
                                 .formatter(new DashScopeChatFormatter())
-                                .build())
+                                .build()
+                )
                 .toolkit(toolkit)
                 .memory(new InMemoryMemory())
                 .maxIters(5)
@@ -151,8 +158,8 @@ public class AgentConfiguration {
         String apiKey = System.getenv("DASHSCOPE_API_KEY");
         if (apiKey == null || apiKey.isEmpty()) {
             throw new IllegalStateException(
-                    "DASHSCOPE_API_KEY environment variable is required. "
-                            + "Please set it before starting the application.");
+                    "DASHSCOPE_API_KEY environment variable is required. Please set it before starting the application."
+            );
         }
         return apiKey;
     }
