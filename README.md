@@ -1,2 +1,3 @@
 # agentscope-java-test
-agentscope java test
+
+agentscope java example project
